@@ -1,7 +1,9 @@
+import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -19,6 +21,12 @@ export class Transaction {
 
   @Column({ type: 'varchar', length: 255 })
   category: string;
+
+  @ManyToOne(() => User, (user) => user.transactions, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  user: User;
 
   @CreateDateColumn()
   create_at: Date;
