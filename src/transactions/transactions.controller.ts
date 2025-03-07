@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 
 @Controller('transactions')
@@ -16,12 +17,29 @@ export class TransactionsController {
   private transactions = [
     { id: 1, type: 'expense', amount: 100, category: 'Food' },
     { id: 2, type: 'income', amount: 500, category: 'Salary' },
+    { id: 3, type: 'expense', amount: 200, category: 'Shopping' },
+    { id: 4, type: 'expense', amount: 50, category: 'Transport' },
+    { id: 5, type: 'income', amount: 1000, category: 'Freelance' },
+    { id: 6, type: 'expense', amount: 300, category: 'Health' },
   ];
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAllTransactions() {
-    return this.transactions;
+  getAllTransactions(
+    @Query('limit') limit: string = '10',
+    @Query('page') page: string = '1',
+  ) {
+    const pageSize = Number(limit);
+    const pageNumber = Number(page);
+    const startIndex = (pageNumber - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    return {
+      total: this.transactions.length,
+      page: pageNumber,
+      limit: pageSize,
+      data: this.transactions.slice(startIndex, endIndex),
+    };
   }
 
   @Get(':id')
