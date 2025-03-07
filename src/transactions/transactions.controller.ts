@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -19,5 +19,17 @@ export class TransactionsController {
       return { message: 'Transaction not found' };
     }
     return transaction;
+  }
+
+  @Post()
+  createTransaction(
+    @Body() body: { type: string; amount: number; category: string },
+  ) {
+    const newTransaction = {
+      id: this.transactions.length + 1,
+      ...body,
+    };
+    this.transactions.push(newTransaction);
+    return newTransaction;
   }
 }
