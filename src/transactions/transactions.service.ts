@@ -1,78 +1,57 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Transaction } from './entities/transaction.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CreateTransactionDto } from './dto/create.transaction.dto';
 
 @Injectable()
 export class TransactionsService {
-  private transactions = [
-    { id: 1, type: 'expense', amount: 100, category: 'Food' },
-    { id: 2, type: 'income', amount: 500, category: 'Salary' },
-    { id: 3, type: 'expense', amount: 200, category: 'Shopping' },
-    { id: 4, type: 'expense', amount: 50, category: 'Transport' },
-    { id: 5, type: 'income', amount: 1000, category: 'Freelance' },
-    { id: 6, type: 'expense', amount: 300, category: 'Health' },
-  ];
+  constructor(
+    @InjectRepository(Transaction)
+    private readonly transactionRepository: Repository<Transaction>,
+  ) {}
 
-  findAll(limit: number, page: number) {
-    if (limit <= 0 || page <= 0) {
-      throw new BadRequestException('Limit and page must be greater than zero');
-    }
-
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-
-    return {
-      total: this.transactions.length,
-      page,
-      limit,
-      data: this.transactions.slice(startIndex, endIndex),
-    };
+  async findAll(): Promise<Transaction[]> {
+    return await this.transactionRepository.find();
   }
 
-  findOne(id: number) {
-    const transaction = this.transactions.find((t) => t.id === id);
+  async findOne(id: number): Promise<Transaction> {
+    const transaction = await this.transactionRepository.findOne({
+      where: { id },
+    });
     if (!transaction) {
       throw new NotFoundException(`Transaction with ID ${id} not found`);
     }
     return transaction;
   }
 
-  createTransaction(data: { type: string; amount: number; category: string }) {
-    if (!data.type || !data.amount || !data.category) {
-      throw new BadRequestException(
-        'Type, amount, and category are required fields',
-      );
-    }
-    const newTransaction = {
-      id: this.transactions.length + 1,
-      ...data,
-    };
-    this.transactions.push(newTransaction);
-    return newTransaction;
+  async createTransaction(
+    createTransactionDto: CreateTransactionDto,
+  ): Promise<Transaction> {
+    const newTransaction =
+      this.transactionRepository.create(createTransactionDto);
+    return await this.transactionRepository.save(newTransaction);
   }
 
-  updateTransaction(
+  async updateTransaction(
     id: number,
-    data: { type?: string; amount?: number; category?: string },
-  ) {
-    const transactionIndex = this.transactions.findIndex((t) => t.id === id);
-    if (transactionIndex === -1) {
+    updateData: Partial<CreateTransactionDto>,
+  ): Promise<Transaction> {
+    const transaction = await this.transactionRepository.preload({
+      id,
+      ...updateData,
+    });
+    if (!transaction) {
       throw new NotFoundException(`Transaction with ID ${id} not found`);
     }
-    this.transactions[transactionIndex] = {
-      ...this.transactions[transactionIndex],
-      ...data,
-    };
-    return this.transactions[transactionIndex];
+
+    return await this.transactionRepository.save(transaction);
   }
 
-  deleteTransaction(id: number) {
-    const transactionIndex = this.transactions.findIndex((t) => t.id === id);
-    if (transactionIndex === -1) {
+  async deleteTransaction(id: number): Promise<void> {
+    const result = await this.transactionRepository.delete(id);
+    if (result.affected === 0) {
       throw new NotFoundException(`Transaction with ID ${id} not found`);
     }
-    this.transactions.splice(transactionIndex, 1);
   }
 }
