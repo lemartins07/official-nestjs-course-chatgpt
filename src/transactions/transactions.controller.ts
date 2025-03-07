@@ -9,8 +9,11 @@ import {
   Post,
   Put,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
+import { CreateTransactionDto } from './dto/create.transaction.dto';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -32,9 +35,8 @@ export class TransactionsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createTransaction(
-    @Body() body: { type: string; amount: number; category: string },
-  ) {
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  createTransaction(@Body() body: CreateTransactionDto) {
     return this.transactionService.createTransaction(body);
   }
 
