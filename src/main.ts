@@ -9,7 +9,8 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true, // Remove campos desconhecidos
       forbidNonWhitelisted: true, // Retorna erro se um campo não permitido for enviado
-      transform: true, // Converte os tipos automaticamente (ex: string para número)
+      transform: true, // Habilita a transformação automática de DTOs
+      transformOptions: { enableImplicitConversion: true }, // Permite conversão implícita de tipos (ex: "10" → 10).
     }),
   );
 
