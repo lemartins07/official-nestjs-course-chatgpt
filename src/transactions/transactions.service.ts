@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Injectable()
 export class TransactionsService {
@@ -12,6 +16,10 @@ export class TransactionsService {
   ];
 
   findAll(limit: number, page: number) {
+    if (limit <= 0 || page <= 0) {
+      throw new BadRequestException('Limit and page must be greater than zero');
+    }
+
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
 
@@ -32,6 +40,11 @@ export class TransactionsService {
   }
 
   createTransaction(data: { type: string; amount: number; category: string }) {
+    if (!data.type || !data.amount || !data.category) {
+      throw new BadRequestException(
+        'Type, amount, and category are required fields',
+      );
+    }
     const newTransaction = {
       id: this.transactions.length + 1,
       ...data,
