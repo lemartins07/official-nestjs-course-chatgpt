@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  Post,
+} from '@nestjs/common';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -8,6 +17,7 @@ export class TransactionsController {
   ];
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   getAllTransactions() {
     return this.transactions;
   }
@@ -16,12 +26,13 @@ export class TransactionsController {
   getTransactionById(@Param('id') id: string) {
     const transaction = this.transactions.find((t) => t.id === Number(id));
     if (!transaction) {
-      return { message: 'Transaction not found' };
+      throw new NotFoundException(`Transaction with ID ${id} not found`);
     }
     return transaction;
   }
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   createTransaction(
     @Body() body: { type: string; amount: number; category: string },
   ) {
