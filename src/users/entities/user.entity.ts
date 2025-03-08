@@ -12,6 +12,8 @@ export class User {
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
-  @OneToMany(() => Transaction, (transaction) => transaction.user)
+  @OneToMany(() => Transaction, (transaction) => transaction.user, {
+    cascade: true,
+  })
   transactions: Transaction[];
 }

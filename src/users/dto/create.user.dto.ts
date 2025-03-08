@@ -1,13 +1,27 @@
-import { IsEmail, IsNotEmpty, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { CreateTransactionDto } from 'src/transactions/dto/create.transaction.dto';
 
 export class CreateUserDto {
   @IsEmail()
-  @IsNotEmpty()
-  @IsString()
   email: string;
 
   @IsString()
   @IsNotEmpty()
-  @Min(6)
+  @MinLength(6)
   password: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateTransactionDto)
+  transactions?: CreateTransactionDto[];
 }
