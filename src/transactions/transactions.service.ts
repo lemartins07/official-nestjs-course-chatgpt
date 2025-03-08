@@ -12,12 +12,15 @@ export class TransactionsService {
   ) {}
 
   async findAll(): Promise<Transaction[]> {
-    return await this.transactionRepository.find();
+    return await this.transactionRepository.find({
+      relations: ['user'],
+    });
   }
 
   async findOne(id: number): Promise<Transaction> {
     const transaction = await this.transactionRepository.findOne({
       where: { id },
+      relations: ['user'],
     });
     if (!transaction) {
       throw new NotFoundException(`Transaction with ID ${id} not found`);
