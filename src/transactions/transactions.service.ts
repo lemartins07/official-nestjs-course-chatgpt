@@ -11,10 +11,22 @@ export class TransactionsService {
     private readonly transactionRepository: Repository<Transaction>,
   ) {}
 
-  async findAll(): Promise<Transaction[]> {
-    return await this.transactionRepository.find({
-      relations: ['user'],
+  async findAll(
+    page: number,
+    limit: number = 10,
+  ): Promise<{
+    data: Transaction[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const [data, total] = await this.transactionRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+      order: { create_at: 'DESC' },
     });
+
+    return { data, total, page, limit };
   }
 
   async findOne(id: number): Promise<Transaction> {

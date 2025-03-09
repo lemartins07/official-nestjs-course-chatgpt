@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -20,8 +21,14 @@ export class TransactionsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAllTransactions() {
-    return this.transactionService.findAll();
+  getAllTransactions(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.transactionService.findAll(
+      Number(page) || 1,
+      Number(limit) || 10,
+    );
   }
 
   @Get(':id')
