@@ -23,7 +23,7 @@ export class TransactionsService {
     const [data, total] = await this.transactionRepository.findAndCount({
       take: limit,
       skip: (page - 1) * limit,
-      order: { create_at: 'DESC' },
+      order: { created_at: 'DESC' },
       relations: ['user'],
     });
 
