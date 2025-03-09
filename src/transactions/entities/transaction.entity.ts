@@ -3,12 +3,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('transactions')
+@Index(['user']) // 📌 Índice para otimizar buscas por usuário
+@Index(['type', 'created_at']) // 📌 Índice composto para filtrar por tipo e data
 export class Transaction {
   @PrimaryGeneratedColumn()
   id: number;
@@ -26,6 +29,7 @@ export class Transaction {
     nullable: false,
     onDelete: 'CASCADE',
   })
+  @Index() // 📌 Criando índice diretamente no relacionamento
   user: User;
 
   @CreateDateColumn()
