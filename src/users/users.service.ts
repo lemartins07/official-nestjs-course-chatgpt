@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create.user.dto';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
@@ -13,6 +13,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -27,22 +28,39 @@ export class UsersService {
     return user;
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.email = :email', { email })
+      .addSelect('user.password') // 👈 Aqui carregamos a senha manualmente apenas quando necessário
+      .getOne();
+  }
+
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const { email, password, transactions } = createUserDto;
-    const user = new User();
-    user.email = email;
-    user.password = password;
 
-    if (transactions && transactions.length > 0) {
-      user.transactions = transactions.map((transactionsDto) => {
-        const transaction = new Transaction();
-        transaction.type = transactionsDto.type;
-        transaction.amount = transactionsDto.amount;
-        transaction.category = transactionsDto.category;
-        return transaction;
+    return await this.dataSource.transaction(async (manager) => {
+      const user = manager.create(User, { email, password });
+      await manager.save(user);
+
+      if (transactions && transactions.length > 0) {
+        const transactionEntities = transactions.map((transactionDto) =>
+          manager.create(Transaction, { ...transactionDto, user }),
+        );
+        await manager.save(transactionEntities);
+      }
+
+      const userWithTransactions = await manager.findOne(User, {
+        where: { id: user.id },
+        relations: ['transactions'],
       });
-    }
-    return await this.userRepository.save(user);
+
+      if (!userWithTransactions) {
+        throw new Error('User not found after creation');
+      }
+
+      return userWithTransactions;
+    });
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {

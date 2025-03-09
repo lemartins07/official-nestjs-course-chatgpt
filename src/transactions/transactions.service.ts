@@ -24,6 +24,7 @@ export class TransactionsService {
       take: limit,
       skip: (page - 1) * limit,
       order: { create_at: 'DESC' },
+      relations: ['user'],
     });
 
     return { data, total, page, limit };
