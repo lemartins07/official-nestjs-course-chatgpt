@@ -24,10 +24,12 @@ export class TransactionsController {
   getAllTransactions(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('currency') currency?: string,
   ) {
     return this.transactionService.findAll(
       Number(page) || 1,
       Number(limit) || 10,
+      currency,
     );
   }
 

@@ -1,19 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Transaction } from './entities/transaction.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateTransactionDto } from './dto/create.transaction.dto';
+import { CurrencyService } from 'src/currency/currency.service';
+
+interface ExchangeRateProvider {
+  getRate: (currency: string) => number;
+}
 
 @Injectable()
 export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
+    private readonly currencyService: CurrencyService,
+    @Inject('EXCHANGE_RATE_PROVIDER')
+    private readonly exchangeRateProvider: ExchangeRateProvider,
   ) {}
 
   async findAll(
     page: number,
     limit: number = 10,
+    currency?: string,
   ): Promise<{
     data: Transaction[];
     total: number;
@@ -26,6 +35,13 @@ export class TransactionsService {
       order: { created_at: 'DESC' },
       relations: ['user'],
     });
+
+    if (currency) {
+      const rate = this.exchangeRateProvider.getRate(currency);
+      data.forEach((transaction) => {
+        transaction.amount = parseFloat((transaction.amount * rate).toFixed(2));
+      });
+    }
 
     return { data, total, page, limit };
   }
